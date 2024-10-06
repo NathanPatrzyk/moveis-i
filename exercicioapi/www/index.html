@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, width=device-width, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title>Hello World</title>
+  </head>
+  <body class="bg-zinc-950">
+    <div class="w-full flex flex-col justify-center p-4">
+      <div class="flex flex-col gap-4">
+        <label
+          for="idPost"
+          class="bg-zinc-900 text-zinc-100 border border-zinc-800 rounded-lg w-full p-4 flex gap-4"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#a1a1aa"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-search"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            class="placeholder-zinc-400 w-full bg-transparent outline-none border-none"
+            type="number"
+            name="idPost"
+            id="idPost"
+            min="1"
+            placeholder="Qual o código do post?"
+          />
+        </label>
+        <button
+          onclick="getPost()"
+          class="bg-lime-300 hover:bg-lime-400 text-lime-950 font-semibold rounded-lg w-full p-3"
+        >
+          Pesquisar
+        </button>
+        <div class="bg-zinc-900 rounded-lg p-4 space-y-2 hidden" id="data">
+          <p
+            id="userId"
+            class="rounded-full border border-lime-500 bg-lime-500/20 text-lime-500 text-sm px-3 inline-block"
+          ></p>
+          <p id="title" class="text-3xl text-zinc-50 font-semibold"></p>
+          <p id="body" class="text-zinc-100"></p>
+          <button
+            id="showComments"
+            onclick="getPostComments()"
+            class="text-sm text-zinc-200 hover:text-zinc-300 underline"
+          >
+            Mostrar comentários
+          </button>
+
+          <div id="comments" class="hidden divide-y divide-zinc-800">
+            <p
+              id="isCommentDeleted"
+              class="fixed left-4 top-4 text-red-500 bg-red-500/30 border border-red-500 rounded-lg p-2 hidden"
+            ></p>
+            <p class="text-3xl text-zinc-50 font-semibold py-2">Comentários:</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="cordova.js"></script>
+    <script src="js/tailwind.js"></script>
+
+    <script>
+      let post;
+
+      function getPost() {
+        idPost = document.getElementById("idPost");
+        url = "https://jsonplaceholder.typicode.com/posts/" + idPost.value;
+
+        data = document.getElementById("data");
+
+        userId = document.getElementById("userId");
+        title = document.getElementById("title");
+        body = document.getElementById("body");
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((json) => {
+            userId.innerHTML = json.userId;
+            title.innerHTML = json.title;
+            body.innerHTML = json.body;
+            data.classList.remove("hidden");
+            post = idPost.value;
+            idPost.value = "";
+          });
+      }
+
+      function getPostComments() {
+        comments = document.getElementById("comments");
+        showComments = document.getElementById("showComments");
+
+        url =
+          "https://jsonplaceholder.typicode.com/posts/" + post + "/comments";
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((json) => {
+            json.forEach((comment) => {
+              comments.innerHTML += `
+                <div class="flex flex-col gap-4">
+                  <div class="py-2 flex justify-between items-center">
+                    <div class="h-full">
+                      <p
+                        class="rounded-full border border-lime-500 bg-lime-500/20 text-lime-500 text-sm px-3 inline-block"
+                      >
+                        ${comment.email}
+                      </p>
+                      <p class="text-zinc-100">
+                        ${comment.body}
+                      </p>
+                    </div>
+                    <div class="h-full" onClick="deleteComment(${comment.id})">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x active:bg-zinc-800 active:rounded-lg m-1"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    </div>
+                  </div>
+                </div>
+              `;
+            });
+
+            comments.classList.remove("hidden");
+            showComments.classList.add("hidden");
+          })
+          .then(() => {});
+      }
+
+      function deleteComment(commentId) {
+        isCommentDeleted = document.getElementById("isCommentDeleted");
+        url = "https://jsonplaceholder.typicode.com/comments/" + commentId;
+
+        fetch(url, {
+          method: "DELETE",
+        }).then((response) => {
+          if (response.status == 200) {
+            isCommentDeleted.classList.remove("hidden");
+            isCommentDeleted.innerHTML =
+              "Comentário " + commentId + " deletado com sucesso!";
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
